@@ -34,3 +34,10 @@ handlers:
 libraries:
 - name: jinja2
   version: latest
+- name: MySQLdb
+  version: latest
+
+# [START env_variables]
+#env_variables:
+#  VAR_NAME: value
+# [END env_variables]
