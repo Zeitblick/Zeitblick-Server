@@ -7,22 +7,24 @@ import MySQLdb
 app = Flask(__name__)
 api = Api(app)
 
-# Connect with MySQL
-env = os.getenv('SERVER_SOFTWARE')
-if (env and env.startswith('Google App Engine/')):
-  # Connecting from App Engine
-  db = MySQLdb.connect(
-    unix_socket=env_config['MYSQL_SOCKET_PATH'],
-    user=env_config['MYSQL_USER'],
-    passwd=env_config['MYSQL_PASSWORD'])
-else:
-  # Connecting from an external network.
-  # Make sure your network is whitelisted
-  db = MySQLdb.connect(
-    host=env_config['MYSQL_IP'],
-    port=3306,
-    user=env_config['MYSQL_USER'],
-    passwd=env_config['MYSQL_PASSWORD'])
+def connectDB():
+    env = os.getenv('SERVER_SOFTWARE')
+    if (env and env.startswith('Google App Engine/')):
+        # Connecting from App Engine
+        db = MySQLdb.connect(
+            unix_socket=env_config['MYSQL_SOCKET_PATH'],
+            user=env_config['MYSQL_USER'],
+            passwd=env_config['MYSQL_PASSWORD'])
+    else:
+        # Connecting from an external network.
+        # Make sure your network is whitelisted
+        db = MySQLdb.connect(
+            host=env_config['MYSQL_IP'],
+            port=3306,
+            user=env_config['MYSQL_USER'],
+            passwd=env_config['MYSQL_PASSWORD'])
+    return db
+
 
 # Config REST API
 @app.route('/')
@@ -47,20 +49,26 @@ class SimilarHeadRotation(Resource):
             roll_tolerance = 10.0
 
             # query
-            cursor = db.cursor()
+            conn = connectDB()
+            cursor = conn.cursor()
+
             cursor.execute('SELECT * FROM zeitblick_db.Faces WHERE panAngle < %s AND panAngle > %s AND '
-                                                     'tiltAngle < %s AND tiltAngle > %s AND '
-                                                     'rollAngle < %s AND rollAngle > %s',
-                           (_pan + pan_tolerance, _pan - pan_tolerance,
-                            _tilt + tilt_tolerance, _tilt - tilt_tolerance,
-                            _roll + roll_tolerance, _roll - roll_tolerance,))
+                                                                 'tiltAngle < %s AND tiltAngle > %s AND '
+                                                                 'rollAngle < %s AND rollAngle > %s',
+                               (_pan + pan_tolerance, _pan - pan_tolerance,
+                                _tilt + tilt_tolerance, _tilt - tilt_tolerance,
+                                _roll + roll_tolerance, _roll - roll_tolerance,))
 
             result = cursor.fetchone()
 
             return {'inventory_no': result[1]}
 
         except Exception as e:
-            return {'error': str(e)}
+            return {'error': str(e)}, 500
+
+        finally:
+            cursor.close()
+            conn.close()
 
 api.add_resource(SimilarHeadRotation, '/SimilarHeadRotation')
 
