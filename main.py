@@ -23,8 +23,6 @@ else:
     port=3306,
     user=env_config['MYSQL_USER'],
     passwd=env_config['MYSQL_PASSWORD'])
-cursor = db.cursor()
-cursor.execute('SELECT 1 + 1')
 
 # Config REST API
 @app.route('/')
