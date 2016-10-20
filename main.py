@@ -2,6 +2,7 @@ from flask import Flask
 from flask_restful import Resource, Api, reqparse
 from environment import env_config
 import os
+import sqlalchemy.pool as pool
 import MySQLdb
 
 app = Flask(__name__)
@@ -24,6 +25,8 @@ def connectDB():
             user=env_config['MYSQL_USER'],
             passwd=env_config['MYSQL_PASSWORD'])
     return db
+
+dbpool = pool.QueuePool(connectDB, max_overflow=10, pool_size=5)
 
 
 # Config REST API
@@ -49,7 +52,7 @@ class SimilarHeadRotation(Resource):
             roll_tolerance = 10.0
 
             # query
-            conn = connectDB()
+            conn = dbpool.connect()
             cursor = conn.cursor()
 
             cursor.execute('SELECT * FROM zeitblick_db.Faces WHERE panAngle < %s AND panAngle > %s AND '
