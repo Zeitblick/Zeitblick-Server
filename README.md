@@ -1,10 +1,10 @@
-Entstanden im Rahmen des [Kulturhackathons Coding Da Vinci 2016](https://codingdavinci.de/).    
-Zugehöriger [Hackdash Eintrag](https://hackdash.org/projects/57dd6cb2d9284f016c047471).
+Created during the culture hackathon [Coding Da Vinci Nord 2016](https://codingdavinci.de/) in Hamburg, Germany.    
+[Info website (German)](https://hackdash.org/projects/57dd6cb2d9284f016c047471)
 
-# Zeitblick Server / API
+# Zeitblick Server
 
-Dies ist das Backend für beide Zeitblick Apps.  
-Es wurde für die "Google Cloud App Engine" (Standard Environment) angepasst.
+This is the backend for the "Zeitblick" app.  
+It has been optimized for the "Google Cloud App Engine" (Standard Environment).
 
 ## Deployment ([Google App Engine](https://cloud.google.com/appengine/docs/python/))
 
@@ -12,5 +12,5 @@ Es wurde für die "Google Cloud App Engine" (Standard Environment) angepasst.
 ```
 pip install -t lib -r requirements.txt
 ```
-1. [MySQL Datenbank](https://cloud.google.com/sql/docs) einrichten (mehr Infos und Setup-Skript folgen)
-1. Die Datei `environment_template.py` in `environment.py` umbenennen und die Infos der MySQL Datenbank eintragen
+1. [MySQL Datenbank](https://cloud.google.com/sql/docs) (setup script will follow)
+1. Rename the file `environment_template.py` into `environment.py` and adjust the information
