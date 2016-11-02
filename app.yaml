@@ -10,6 +10,10 @@ runtime: python27
 api_version: 1
 threadsafe: yes
 
+#builtins:
+# Deferred is required to use google.appengine.ext.deferred.
+#- deferred: on
+
 # Handlers define how to route requests to your application.
 handlers:
 

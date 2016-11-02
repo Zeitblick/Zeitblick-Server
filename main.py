@@ -8,6 +8,8 @@ import MySQLdb
 from google.appengine.ext import ndb
 import json
 
+import logging
+
 app = Flask(__name__)
 api = Api(app)
 
@@ -32,15 +34,28 @@ def connectDB():
 dbpool = pool.QueuePool(connectDB, max_overflow=10, pool_size=5)
 
 
-class DateCreation(ndb.Model):
+class DateCreation(ndb.Expando):
     pass
 
-class MKGMetadata(ndb.Model):
+class MKGMetadata(ndb.Expando):
     # only structured properties have to be defined
     date = ndb.LocalStructuredProperty(DateCreation)
+    inventory_no = ndb.StringProperty()
+    record_id = ndb.StringProperty()
 
-class Portrait(ndb.Model):
+class Portrait(ndb.Expando):
     mkg_metadata = ndb.LocalStructuredProperty(MKGMetadata)
+    inventory_no = ndb.StringProperty()
+    record_id = ndb.StringProperty()
+
+    def as_dict(self):
+        return self.to_dict(exclude=["vision_response"])
+
+class PortraitService():
+    @staticmethod
+    def find_by_inventory_no(inventory_no):
+        return Portrait.query(Portrait.inventory_no == inventory_no).get()
+
 
 # Config REST API
 @app.route('/')
@@ -56,13 +71,15 @@ class MetadataForObject(Resource):
 
             _inv_no = args['inventory_no']
 
-            portrait = Portrait.query().fetch(1)[0]
-            metadata = portrait.to_dict(include=["mkg_metadata"])
-            metadata["inventory_no"] = _inv_no
-            return metadata
+            portrait = PortraitService.find_by_inventory_no(_inv_no)
+
+            if portrait is None:
+                return {"msg": "No entry found"}, 404
+
+            return portrait.as_dict()
 
         except Exception as e:
-            return {'error': str(e)}, 404
+            return {'error': str(e)}, 500
 
 class SimilarHeadRotation(Resource):
     def post(self):
@@ -93,8 +110,13 @@ class SimilarHeadRotation(Resource):
                                 _roll + roll_tolerance, _roll - roll_tolerance,))
 
             result = cursor.fetchone()
+            inventory_no = result[1]
+            portrait = PortraitService.find_by_inventory_no(inventory_no)
 
-            return {'inventory_no': result[1]}
+            if portrait is None:
+                return {"msg": "No entry found"}, 404
+
+            return portrait.as_dict()
 
         except Exception as e:
             return {'error': str(e)}, 500
