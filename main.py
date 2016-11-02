@@ -5,6 +5,9 @@ import os
 import sqlalchemy.pool as pool
 import MySQLdb
 
+from google.appengine.ext import ndb
+import json
+
 app = Flask(__name__)
 api = Api(app)
 
@@ -29,10 +32,40 @@ def connectDB():
 dbpool = pool.QueuePool(connectDB, max_overflow=10, pool_size=5)
 
 
+class DateCreation(ndb.Expando):
+    pass
+
+class MKGMetadata(ndb.Model):
+    # only structured properties have to be defined
+    date = ndb.LocalStructuredProperty(DateCreation)
+
+class Portrait(ndb.Expando):
+    mkg_metadata = ndb.LocalStructuredProperty(MKGMetadata)
+
 # Config REST API
 @app.route('/')
 def hello_world():
     return 'Hello World, %s' % env_config['MYSQL_DATABASE']
+
+class MetadataForObject(Resource):
+    def get(self):
+        try:
+            parser = reqparse.RequestParser()
+            parser.add_argument('inventory_no', location='args')
+            args = parser.parse_args()
+
+            _inv_no = args['inventory_no']
+            # portrait = Portrait(mkg_metadata="hah")
+            portrait = Portrait.query().fetch(1)[0]
+            # return json.dumps(portrait[1].to_dict(exclude=["vision_response"]))
+            # return portrait[1].mkg_metadata.inventory_no
+            return portrait.to_dict(include=["mkg_metadata"])
+            # return json.dumps([portrait.to_dict() for p in Pasta.query(Pasta.name == "Ravioli").fetch()])
+            # return Portrait.query().fetch(1)
+
+        except Exception as e:
+            return {'error': str(e)}, 404
+
 
 class SimilarHeadRotation(Resource):
     def post(self):
@@ -73,6 +106,7 @@ class SimilarHeadRotation(Resource):
             cursor.close()
             conn.close()
 
+api.add_resource(MetadataForObject, '/MetadataForObject')
 api.add_resource(SimilarHeadRotation, '/SimilarHeadRotation')
 
 if __name__ == '__main__':
