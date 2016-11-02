@@ -33,15 +33,16 @@ def connectDB():
 
 dbpool = pool.QueuePool(connectDB, max_overflow=10, pool_size=5)
 
+class AdministrativeMetadata(ndb.Expando):
+    pass
 
-class DateCreation(ndb.Expando):
+class Event(ndb.Expando):
     pass
 
 class MKGMetadata(ndb.Expando):
     # only structured properties have to be defined
-    date = ndb.LocalStructuredProperty(DateCreation)
-    inventory_no = ndb.StringProperty()
-    record_id = ndb.StringProperty()
+    event = ndb.LocalStructuredProperty(Event)
+    administrativeMetadata = ndb.LocalStructuredProperty(AdministrativeMetadata)
 
 class Portrait(ndb.Expando):
     mkg_metadata = ndb.LocalStructuredProperty(MKGMetadata)
